@@ -1,0 +1,1 @@
+CREATE TYPE semester AS ENUM ('FIRST','THIRD','EIGHTH');
