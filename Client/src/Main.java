@@ -11,7 +11,7 @@ public class Main {
     public static void main(String [] args) {
         RemoteDatabaseWithAuth db = null;
         try {
-            db = new RemoteDatabaseWithAuth("127.0.0.1", 25565);
+            db = new RemoteDatabaseWithAuth("127.0.0.1", 33737);
         } catch (IOException e){
             System.out.println(e.getMessage());
             return;

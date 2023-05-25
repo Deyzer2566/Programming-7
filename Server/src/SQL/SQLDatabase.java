@@ -174,8 +174,11 @@ public class SQLDatabase extends LocalDatabase {
             userDatabases.put(id,new SQLUserDatabase(id,this));
         return userDatabases.get(id);
     }
+
     public synchronized void remove(long id, int clientId) throws GroupDidNotFound {
         PreparedStatement pstm = null;
+        if(!clientsGroups.get(clientId).contains(id))
+            throw new GroupDidNotFound("Доступ к группе запрещен: нет прав на удаление группы");
         try {
             pstm = connection.prepareStatement(
                     "SELECT coords,admin FROM studygroups");
@@ -188,23 +191,20 @@ public class SQLDatabase extends LocalDatabase {
                 adminId = set.getInt(2);
             }
 
-            if(!clientsGroups.get(clientId).contains(id))
-                throw new GroupDidNotFound("Доступ к группе запрещен: нет прав на удаление группы");
-
             pstm = connection.prepareStatement(
                     "DELETE FROM studygroups WHERE id = ?");
             pstm.setLong(1,id);
-            pstm.execute();
+            pstm.executeUpdate();
 
             pstm = connection.prepareStatement(
                     "DELETE FROM coordinates WHERE id = ?");
-            pstm.setLong(1,id);
-            pstm.execute();
+            pstm.setLong(1,coordId);
+            pstm.executeUpdate();
 
             pstm = connection.prepareStatement(
                     "DELETE FROM person WHERE id = ?");
-            pstm.setLong(1,id);
-            pstm.execute();
+            pstm.setLong(1,adminId);
+            pstm.executeUpdate();
 
             clientsGroups.get(clientId).remove(id);
         } catch (SQLException e) {
@@ -241,7 +241,7 @@ public class SQLDatabase extends LocalDatabase {
             if(set.getString(8) != null)
                 sem = Semester.valueOf(set.getString(8));
             Person admin = null;
-            int whoCreated = set.getInt(9);
+            int whoCreated = set.getInt(10);
             if(set.getInt(9) > 0) {
                 PreparedStatement pstm2 = connection.prepareStatement("SELECT * FROM person WHERE id = ?");
                 pstm2.setInt(1, set.getInt(9));
@@ -356,6 +356,8 @@ public class SQLDatabase extends LocalDatabase {
     }
 
     public synchronized void update(long id, StudyGroup group, int clientId) throws GroupDidNotFound {
+        if(!clientsGroups.get(clientId).contains(id))
+            throw new GroupDidNotFound("Доступ запрещен!");
         try{
             PreparedStatement pstm = connection.prepareStatement(
                     "SELECT coords,admin FROM studygroups WHERE id = ? AND whoCreated=?");

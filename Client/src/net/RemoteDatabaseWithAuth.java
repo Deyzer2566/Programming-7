@@ -18,8 +18,8 @@ public class RemoteDatabaseWithAuth extends RemoteDatabase {
 
     public RemoteDatabaseWithAuth(String host, int port) throws IOException {
         super(host, port);
-        login = "";
-        password = "";
+        login = " ";
+        password = " ";
     }
 
     /**

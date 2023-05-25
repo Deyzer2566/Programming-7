@@ -31,7 +31,7 @@ public class Client extends IOHandler {
         isConnected = true;
     }
 
-    private Object readObject() throws IOException{
+    protected Object readObject() throws IOException{
         try {
             this.in = new ObjectInputStream(main.getInputStream());
             return in.readObject();
@@ -120,7 +120,6 @@ public class Client extends IOHandler {
     @Override
     public StudyGroup readStudyGroup() {
         try {
-            //this.in = new ObjectInputStream(main.getInputStream());
             return (StudyGroup)in.readObject();
         } catch (IOException | ClassNotFoundException | ClassCastException e) {
             disconnect();

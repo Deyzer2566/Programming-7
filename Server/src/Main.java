@@ -21,7 +21,7 @@ public class Main {
 
         ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
         serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.bind(new InetSocketAddress(25565));
+        serverSocketChannel.bind(new InetSocketAddress(33737));
         ServerSocket serverSocket = serverSocketChannel.socket();
         SQLDatabase db;
         try {
@@ -68,7 +68,7 @@ public class Main {
                 SocketChannel errChannel = null;
                 while(errChannel == null)
                     errChannel = serverSocketChannel.accept();
-                Client client = new ClientWithMultiThreadingSend(socketChannel.socket(),errChannel.socket());
+                Client client = new ClientWithMultiThreading(socketChannel.socket(),errChannel.socket());
                 clients.addClient(client);
             }
             try {

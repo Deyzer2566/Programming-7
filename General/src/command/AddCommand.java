@@ -18,6 +18,8 @@ public class AddCommand implements Command{
 	@Override
 	public void execute(String [] args) throws InvalidCommandArgumentException{
 		StudyGroup newGroup = ioHandler.readStudyGroup();
+		if(newGroup == null)
+			return;
 		db.add(newGroup);
 	}
 

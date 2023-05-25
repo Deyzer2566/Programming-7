@@ -352,7 +352,7 @@ public abstract class IOHandler implements Reader, Writer {
 
     /**
      * Читает информацию о группе
-     * @return группу или null, если пользователь не ввел группу и canBeNull==true
+     * @return группу или null, если пользователь её не ввел
      */
 	public StudyGroup readStudyGroup(){
 		String name = readString("Введите название группы: ",false);

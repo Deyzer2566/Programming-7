@@ -6,8 +6,10 @@ import command.InvalidCommandArgumentException;
 import command.ThereIsNotCommand;
 import io.IOHandler;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutorService;
@@ -24,21 +26,29 @@ public class ClientHandler{
 
     ExecutorService executeThread;
 
+    HashMap<IOHandler, Boolean> executeClients;
     public ClientHandler(SQLDatabase globalDB) {
         this.globalDB = globalDB;
         log = org.slf4j.LoggerFactory.getLogger("client handler");
         clients = new LinkedList<Client>();
         queriesReader = Executors.newCachedThreadPool();
         executeThread = Executors.newFixedThreadPool(3);
+        executeClients = new HashMap<>();
     }
-    private void executeWithCheckingLogin (Client client, SQLDatabase database){
+    private void executeWithCheckingLogin (Client client, SQLDatabase database) throws ThereIsNoClient{
         int id = readUserId(client);
         if(id == -2)
             return;
-        executeWithFixedThreadPool(client, new CommandHandler(database.getUserDatabaseById(id),client));
+        executeThread.execute(()->
+        {
+            executeClients.put(client,true);
+            execute(client, new CommandHandler(database.getUserDatabaseById(id),client));
+            executeClients.put(client,false);
+        });
+        //executeWithFixedThreadPool(client, new CommandHandler(database.getUserDatabaseById(id),client));
     }
-    private int readUserId(Client client) {
-        if(!client.hasNext())
+    private int readUserId(Client client) throws ThereIsNoClient {
+        if (!client.hasNext())
             return -2;
         int id = -1;
         try {
@@ -47,13 +57,13 @@ public class ClientHandler{
             id = globalDB.getIdByLogin(login, password);
             //if(id == -1)
             //    id = createIdByLogin(login,password);
-        } catch (ArrayIndexOutOfBoundsException e) {}
+        } catch (NoSuchElementException e) {
+            throw new ThereIsNoClient("Клиент отключился!");
+        }
         return id;
     }
     private LinkedList<String> readQuery(IOHandler client){
         String command = null;
-        if(!client.hasNext())
-            return null;
         try {
             command = client.readLine();
         } catch (NoSuchElementException e) {
@@ -88,6 +98,7 @@ public class ClientHandler{
         String command = commandArgs.get(0);
         commandArgs.remove(0);
         log.info("Пришла команда "+command);
+        executeClients.put(client,true);
         executeThread.execute(()-> {
             try {
                 ch.execute(command, commandArgs.size() == 0 ? null : commandArgs.toArray(new String[commandArgs.size()]));
@@ -95,23 +106,38 @@ public class ClientHandler{
                 client.writeError(e.getMessage());
             }
         });
+        executeClients.put(client,false);
     }
 
     public void addClient(Client client){
         clients.add(client);
         queriesReader.execute(() -> {
+            executeClients.put(client,false);
             while(client.isConnected()){
-                executeWithCheckingLogin(client,globalDB);
+                try{
+                    if(!executeClients.get(client))
+                        executeWithCheckingLogin(client,globalDB);
+                } catch (ThereIsNoClient e) {
+                    client.disconnect();
+                    break;
+                }
+                try {
+                    Thread.sleep(150);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
             clients.remove(client);
+            executeClients.remove(client);
+            log.info("Клиент отключился");
         });
         log.info("Новое подключение");
     }
 
     public void close(){
+        clients.forEach(t->t.disconnect());
         executeThread.shutdown();
         queriesReader.shutdown();
-        clients.forEach(t->t.disconnect());
         clients.clear();
     }
 }
