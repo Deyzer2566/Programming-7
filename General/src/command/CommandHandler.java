@@ -22,21 +22,20 @@ public class CommandHandler {
         this.db = db;
         historyStartPointer=0;
         this.ioHandler=ioHandler;
-        register("help",new HelpCommand(this,this.ioHandler));
-        register("info",new InfoCommand(db,this.ioHandler));
-        register("show",new ShowCommand(db,this.ioHandler));
-        register("add",new AddCommand(db,this.ioHandler));
-        register("update",new UpdateByIdCommand(db,this.ioHandler));
+
+        register("help",new HelpCommand(this,ioHandler));
+        register("info",new InfoCommand(db,ioHandler));
+        register("add",new AddCommand(db,ioHandler));
+        register("update",new UpdateByIdCommand(db,ioHandler));
         register("remove", new RemoveById(db));
         register("clear",new ClearCommand(db));
-        register("remove_head", new RemoveHeadCommand(db,this.ioHandler));
-        register("add_if_max", new AddIfMaxCommand(db,this.ioHandler));
-        register("history", new HistoryCommand(this,this.ioHandler));
-        register("max_by_students_count", new MaxByStudentsCountCommand(db,this.ioHandler));
-        register("print_unique_group_admin",new PrintUniqueGroupAdminCommand(db,this.ioHandler));
+        register("remove_head", new RemoveHeadCommand(db,ioHandler));
+        register("add_if_max", new AddIfMaxCommand(db,ioHandler));
+        register("history", new HistoryCommand(this,ioHandler));
+        register("max_by_students_count", new MaxByStudentsCountCommand(db,ioHandler));
+        register("print_unique_group_admin",new PrintUniqueGroupAdminCommand(db,ioHandler));
         register("print_field_ascending_expelled_students",
-                new PrintFieldAscendingExpelledStudentsCommand(db,this.ioHandler));
-        register("execute_script", new ExecuteScriptCommand(this.ioHandler, this));
+                new PrintFieldAscendingExpelledStudentsCommand(db,ioHandler));
     }
 
     /**

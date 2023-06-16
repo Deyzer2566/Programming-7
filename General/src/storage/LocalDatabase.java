@@ -85,7 +85,7 @@ public class LocalDatabase extends Database {
      *
      * @return коллекция базы
      */
-    public Collection<StudyGroup> getAllGroups(){
+    protected Collection<StudyGroup> getAllGroups(){
         return this.collection;
     }
 
@@ -155,7 +155,7 @@ public class LocalDatabase extends Database {
     }
 
     @Override
-    public String showAllGroups() {
-        return getAllGroups().stream().map(x->x.toString()).collect(Collectors.joining("\n"));
+    public Collection<StudyGroup> showAllGroups() {
+        return getAllGroups();
     }
 }

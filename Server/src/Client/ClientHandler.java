@@ -1,6 +1,7 @@
 package Client;
 
 import SQL.SQLDatabase;
+import SQL.SQLUserDatabase;
 import command.*;
 import io.IOHandler;
 
@@ -40,10 +41,12 @@ public class ClientHandler{
             executeThread.execute(() ->
             {
                 synchronized (globalDB) {
-                    CommandHandler commandHandler = new CommandHandler(globalDB.getUserDatabaseById(id), client);
-                    commandHandler.register("register", new RegisterCommand(globalDB, client));
-                    commandHandler.register("login", new LoginCommand(globalDB, client));
                     synchronized (client) {
+                        SQLUserDatabase hisDb = globalDB.getUserDatabaseById(id);
+                        CommandHandler commandHandler = new CommandHandler(hisDb, client);
+                        commandHandler.register("register", new RegisterCommand(globalDB, client));
+                        commandHandler.register("login", new LoginCommand(globalDB, client));
+                        commandHandler.register("show",new ShowCommand(hisDb,client));
                         execute(client, commandHandler);
                     }
                 }

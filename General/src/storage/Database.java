@@ -73,5 +73,5 @@ public abstract class Database {
      * Выводит все группы
      * @return строка - информация о группах
      */
-    public abstract String showAllGroups();
+    public abstract Collection<StudyGroup> showAllGroups();
 }

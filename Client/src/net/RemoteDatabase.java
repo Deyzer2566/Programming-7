@@ -352,16 +352,16 @@ public class RemoteDatabase extends Database {
     }
 
     @Override
-    public String showAllGroups() {
+    public Collection<StudyGroup> showAllGroups() {
         try {
             send(new Object[]{"show"});
         } catch (IOException e) {
             disconnect();
             return null;
         }
-        String info = null;
+        Collection<StudyGroup> info = null;
         try {
-            info = (String) recieve();
+            info = (Collection<StudyGroup>) recieve();
         } catch (ClassNotFoundException | ClassCastException e) {
             System.out.println(e.getMessage());
             return null;

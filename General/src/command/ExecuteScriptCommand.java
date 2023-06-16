@@ -47,6 +47,8 @@ public class ExecuteScriptCommand implements Command{
             throw new InvalidCommandArgumentException("Невозможно прочитать данные из файла!");
         }
         CommandHandler commandHandler1 = new CommandHandler(commandHandler.getDb(),fileReader);
+        commandHandler1.register("execute_script", new ExecuteScriptCommand(fileReader,commandHandler1));
+        commandHandler1.register("show",new ShowCommand(commandHandler.getDb(), fileReader));
         while(fileReader.hasNextLine()){
             String command = fileReader.readLine();
             if(command == null)

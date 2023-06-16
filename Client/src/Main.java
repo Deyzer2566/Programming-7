@@ -18,8 +18,10 @@ public class Main {
         }
         ConsoleIO console = new ConsoleIO();
         CommandHandler ch = new CommandHandler(db, console);
+        ch.register("show",new ShowCommand(db, console));
         ch.register("login", new LoginCommand(db));
         ch.register("register",new RegisterCommand(db,console));
+        ch.register("execute_script", new ExecuteScriptCommand(console,ch));
         while(db.isConnected()) {
             console.write(">");
             String command = null;

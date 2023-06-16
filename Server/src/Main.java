@@ -31,6 +31,8 @@ public class Main {
         ConsoleIO console = new ConsoleIO();
         SQLUserDatabase userDatabase = db.getUserDatabaseById(0);
         CommandHandler ch = new CommandHandler(userDatabase,console);
+        ch.register("show",new ShowCommandForAdmin(userDatabase, console));
+        ch.register("execute_script", new ExecuteScriptCommand(console,ch));
         ClientHandler clients = new ClientHandler(db);
         console.write(">");
         log = org.slf4j.LoggerFactory.getLogger("main");

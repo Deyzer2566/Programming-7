@@ -66,7 +66,7 @@ public class SQLUserDatabase extends Database {
     }
 
     @Override
-    public String showAllGroups() {
+    public Collection<StudyGroup> showAllGroups() {
         return dbSource.showAllGroups();
     }
 }

@@ -189,7 +189,7 @@ public class RemoteDatabaseWithAuth extends RemoteDatabase {
     }
 
     @Override
-    public String showAllGroups() {
+    public Collection<StudyGroup> showAllGroups() {
         try {
             this.sendLoginAndPassword();
         } catch (IOException e) {

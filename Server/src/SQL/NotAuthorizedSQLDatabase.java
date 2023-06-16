@@ -62,7 +62,7 @@ public class NotAuthorizedSQLDatabase extends SQLUserDatabase {
     }
 
     @Override
-    public String showAllGroups() {
+    public Collection<StudyGroup> showAllGroups() {
         return null;
     }
 }
