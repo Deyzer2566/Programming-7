@@ -50,7 +50,7 @@ public class SQLDatabase extends LocalDatabase {
     }
 
 
-    public int createIdByLogin(String login, String password){
+    public int createIdByLogin(String login, String password) throws ThereIsUserWithThisLogin{
         try {
             PreparedStatement pstm = connection.prepareStatement("SELECT id FROM users WHERE login=?");
             pstm.setString(1,login);
@@ -60,13 +60,13 @@ public class SQLDatabase extends LocalDatabase {
             if(set.next()){
                 id = set.getInt(1);
             }
-            if(id == -1){
-                pstm = connection.prepareStatement("INSERT INTO users(login,password) VALUES(?,?)");
-                pstm.setString(1,login);
-                pstm.setString(2,password);
-                pstm.execute();
-                id = getIdByLogin(login,password);
-            }
+            if(id != -1)
+                throw new ThereIsUserWithThisLogin("Пользователь с таким логином уже существует");
+            pstm = connection.prepareStatement("INSERT INTO users(login,password) VALUES(?,?)");
+            pstm.setString(1,login);
+            pstm.setString(2,password);
+            pstm.execute();
+            id = getIdByLogin(login,password);
             return id;
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -169,7 +169,7 @@ public class SQLDatabase extends LocalDatabase {
         super.put(newGroup);
     }
 
-    public SQLUserDatabase getUserDatabaseById(int id){
+    public synchronized SQLUserDatabase getUserDatabaseById(int id){
         if(userDatabases.get(id) == null)
             userDatabases.put(id,new SQLUserDatabase(id,this));
         return userDatabases.get(id);
@@ -226,9 +226,14 @@ public class SQLDatabase extends LocalDatabase {
     }
 
     private synchronized void synchronize() throws SQLException {
-        PreparedStatement pstm = connection.prepareStatement("SELECT * FROM studygroups");
+        PreparedStatement pstm = connection.prepareStatement("SELECT id FROM users");
+        ResultSet set = pstm.executeQuery();
+        while(set.next()){
+            clientsGroups.put(set.getInt(1),new LinkedList<>());
+        }
+        pstm = connection.prepareStatement("SELECT * FROM studygroups");
         pstm.executeQuery();
-        ResultSet set = pstm.getResultSet();
+        set = pstm.getResultSet();
         while(set.next()){
             int id = set.getInt(1);
             String name = set.getString(2);

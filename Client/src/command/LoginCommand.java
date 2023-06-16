@@ -13,14 +13,21 @@ public class LoginCommand implements Command{
     @Override
     public void execute(String[] args) throws InvalidCommandArgumentException {
         String login = null;
-        String password = null;
+        String password = "";
         try {
             login = args[0];
-            password = args[1];
         } catch (ArrayIndexOutOfBoundsException e){
             throw new InvalidCommandArgumentException("Недостаточно аргументов!");
         }
-        db.changeLoginAndPassword(login,password);
+        try{
+            password = args[1];
+        } catch (ArrayIndexOutOfBoundsException e){
+        }
+        try {
+            db.login(login, password);
+        }catch (NotCorrectLoginOrPassword e){
+            throw new InvalidCommandArgumentException(e.getMessage());
+        }
     }
 
     @Override

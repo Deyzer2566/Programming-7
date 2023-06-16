@@ -1,9 +1,7 @@
 package Client;
 
 import SQL.SQLDatabase;
-import command.CommandHandler;
-import command.InvalidCommandArgumentException;
-import command.ThereIsNotCommand;
+import command.*;
 import io.IOHandler;
 
 import java.io.IOException;
@@ -14,6 +12,8 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 public class ClientHandler{
 
@@ -25,29 +25,32 @@ public class ClientHandler{
     ExecutorService queriesReader;
 
     ExecutorService executeThread;
-
-    HashMap<IOHandler, Boolean> executeClients;
     public ClientHandler(SQLDatabase globalDB) {
         this.globalDB = globalDB;
         log = org.slf4j.LoggerFactory.getLogger("client handler");
         clients = new LinkedList<Client>();
         queriesReader = Executors.newCachedThreadPool();
         executeThread = Executors.newFixedThreadPool(3);
-        executeClients = new HashMap<>();
     }
-    private void executeWithCheckingLogin (Client client, SQLDatabase database) throws ThereIsNoClient{
+    private void executeWithCheckingLogin (Client client) throws ThereIsNoClient {
         int id = readUserId(client);
         if(id == -2)
             return;
-        executeThread.execute(()->
-        {
-            executeClients.put(client,true);
-            execute(client, new CommandHandler(database.getUserDatabaseById(id),client));
-            executeClients.put(client,false);
-        });
-        //executeWithFixedThreadPool(client, new CommandHandler(database.getUserDatabaseById(id),client));
+        synchronized (executeThread) {
+            executeThread.execute(() ->
+            {
+                synchronized (globalDB) {
+                    CommandHandler commandHandler = new CommandHandler(globalDB.getUserDatabaseById(id), client);
+                    commandHandler.register("register", new RegisterCommand(globalDB, client));
+                    commandHandler.register("login", new LoginCommand(globalDB, client));
+                    synchronized (client) {
+                        execute(client, commandHandler);
+                    }
+                }
+            });
+        }
     }
-    private int readUserId(Client client) throws ThereIsNoClient {
+    private synchronized int readUserId(Client client) throws ThereIsNoClient {
         if (!client.hasNext())
             return -2;
         int id = -1;
@@ -55,8 +58,6 @@ public class ClientHandler{
             String login = client.readLine();
             String password = client.read();
             id = globalDB.getIdByLogin(login, password);
-            //if(id == -1)
-            //    id = createIdByLogin(login,password);
         } catch (NoSuchElementException e) {
             throw new ThereIsNoClient("Клиент отключился!");
         }
@@ -91,35 +92,19 @@ public class ClientHandler{
         }
     }
 
-    private void executeWithFixedThreadPool(IOHandler client, CommandHandler ch){
-        LinkedList<String> commandArgs = readQuery(client);
-        if(commandArgs == null)
-            return;
-        String command = commandArgs.get(0);
-        commandArgs.remove(0);
-        log.info("Пришла команда "+command);
-        executeClients.put(client,true);
-        executeThread.execute(()-> {
-            try {
-                ch.execute(command, commandArgs.size() == 0 ? null : commandArgs.toArray(new String[commandArgs.size()]));
-            } catch (ThereIsNotCommand | InvalidCommandArgumentException e) {
-                client.writeError(e.getMessage());
-            }
-        });
-        executeClients.put(client,false);
-    }
-
     public void addClient(Client client){
         clients.add(client);
         queriesReader.execute(() -> {
-            executeClients.put(client,false);
-            while(client.isConnected()){
-                try{
-                    if(!executeClients.get(client))
-                        executeWithCheckingLogin(client,globalDB);
-                } catch (ThereIsNoClient e) {
-                    client.disconnect();
-                    break;
+            while(true){
+                synchronized (client) {
+                    if(!client.isConnected())
+                        break;
+                    try {
+                        executeWithCheckingLogin(client);
+                    } catch (ThereIsNoClient e) {
+                        client.disconnect();
+                        break;
+                    }
                 }
                 try {
                     Thread.sleep(150);
@@ -128,7 +113,6 @@ public class ClientHandler{
                 }
             }
             clients.remove(client);
-            executeClients.remove(client);
             log.info("Клиент отключился");
         });
         log.info("Новое подключение");

@@ -19,6 +19,7 @@ public class Main {
         ConsoleIO console = new ConsoleIO();
         CommandHandler ch = new CommandHandler(db, console);
         ch.register("login", new LoginCommand(db));
+        ch.register("register",new RegisterCommand(db,console));
         while(db.isConnected()) {
             console.write(">");
             String command = null;

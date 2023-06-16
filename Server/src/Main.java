@@ -18,17 +18,16 @@ public class Main {
     static org.slf4j.Logger log;
 
     public static void main(String [] args) throws IOException {
-
-        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-        serverSocketChannel.configureBlocking(false);
-        serverSocketChannel.bind(new InetSocketAddress(33737));
-        ServerSocket serverSocket = serverSocketChannel.socket();
         SQLDatabase db;
         try {
             db = new SQLDatabase();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.configureBlocking(false);
+        serverSocketChannel.bind(new InetSocketAddress(33737));
+        ServerSocket serverSocket = serverSocketChannel.socket();
         ConsoleIO console = new ConsoleIO();
         SQLUserDatabase userDatabase = db.getUserDatabaseById(0);
         CommandHandler ch = new CommandHandler(userDatabase,console);

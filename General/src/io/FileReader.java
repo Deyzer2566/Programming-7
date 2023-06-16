@@ -53,7 +53,8 @@ public class FileReader extends IOHandler{
 
     @Override
     public boolean hasNextLine() {
-        return scanner.hasNextLine();
+        boolean s = scanner.hasNextLine();
+        return s;
     }
 
     @Override

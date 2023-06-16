@@ -1,5 +1,7 @@
 package net;
 
+import command.NotCorrectLoginOrPassword;
+import command.ThereIsUserWithThisLogin;
 import data.StudyGroup;
 import storage.GroupDidNotFound;
 import storage.ThereIsGroupWithThisIdException;
@@ -18,8 +20,25 @@ public class RemoteDatabaseWithAuth extends RemoteDatabase {
 
     public RemoteDatabaseWithAuth(String host, int port) throws IOException {
         super(host, port);
-        login = " ";
-        password = " ";
+        login = "";
+        password = "";
+    }
+
+    public void login(String login,String password) throws NotCorrectLoginOrPassword {
+        changeLoginAndPassword(login,password);
+        try {
+            sendLoginAndPassword();
+            send(new Object[]{"login "+this.login+" "+this.password});
+        } catch (IOException e) {
+            disconnect();
+        }
+
+        try {
+            String err = (String) recieveErr();
+            if (err != null)
+                throw new NotCorrectLoginOrPassword(err);
+        } catch (ClassNotFoundException | ClassCastException e) {
+        }
     }
 
     /**
@@ -27,7 +46,7 @@ public class RemoteDatabaseWithAuth extends RemoteDatabase {
      * @param login логин
      * @param password пароль
      */
-    public void changeLoginAndPassword(String login, String password){
+    public void changeLoginAndPassword(String login, String password) {
         this.login = login;
         MessageDigest sha = null;
         try {
@@ -37,6 +56,22 @@ public class RemoteDatabaseWithAuth extends RemoteDatabase {
         sha.update(password.getBytes(StandardCharsets.UTF_8));
         this.password = Base64.getEncoder().encodeToString(
                         sha.digest());
+    }
+
+    public void register(String login, String password) throws ThereIsUserWithThisLogin {
+        changeLoginAndPassword(login,password);
+        try {
+            sendLoginAndPassword();
+            send(new Object[]{"register "+this.login+" "+this.password});
+        }   catch (IOException e){
+            disconnect();
+        }
+        try {
+            String err = (String) recieveErr();
+            if (err != null)
+                throw new ThereIsUserWithThisLogin(err);
+        } catch (ClassNotFoundException | ClassCastException e) {
+        }
     }
 
     public void sendLoginAndPassword() throws IOException {

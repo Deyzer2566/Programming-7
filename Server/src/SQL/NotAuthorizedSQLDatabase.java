@@ -18,7 +18,7 @@ public class NotAuthorizedSQLDatabase extends SQLUserDatabase {
 
     @Override
     public void remove(long id) throws GroupDidNotFound {
-
+        throw new GroupDidNotFound("Авторизируйтесь для получения доступа к коллекции");
     }
 
     @Override
@@ -28,12 +28,12 @@ public class NotAuthorizedSQLDatabase extends SQLUserDatabase {
 
     @Override
     public StudyGroup removeHead() throws GroupDidNotFound {
-        return null;
+        throw new GroupDidNotFound("Авторизируйтесь для получения доступа к коллекции");
     }
 
     @Override
     public void update(long id, StudyGroup group) throws GroupDidNotFound {
-
+        throw new GroupDidNotFound("Авторизируйтесь для получения доступа к коллекции");
     }
 
     @Override
