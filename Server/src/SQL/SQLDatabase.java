@@ -188,7 +188,8 @@ public class SQLDatabase extends LocalDatabase {
             throw new GroupDidNotFound("Доступ к группе запрещен: нет прав на удаление группы");
         try {
             pstm = connection.prepareStatement(
-                    "SELECT coords,admin FROM studygroups");
+                    "SELECT coords,admin FROM studygroups WHERE id=?");
+            pstm.setLong(1,id);
             int coordId = -1;
             int adminId = -1;
             pstm.executeQuery();
@@ -438,5 +439,10 @@ public class SQLDatabase extends LocalDatabase {
     @Override
     public void addIfMax(StudyGroup group) {
         this.addIfMax(group,0);
+    }
+
+    @Override
+    public String getInfo(){
+        return "Тип БД: PostgreSQL\n"+super.getInfo();
     }
 }
