@@ -31,6 +31,13 @@ public class SQLDatabase extends LocalDatabase {
         synchronize();
     }
 
+    public boolean isConnected() {
+        try {
+            return !connection.isClosed();
+        } catch (SQLException e){
+            return false;
+        }
+    }
     public int getIdByLogin(String login, String password){
         try {
             PreparedStatement pstm = connection.prepareStatement("SELECT id FROM users WHERE login=? AND password =?");
@@ -226,6 +233,8 @@ public class SQLDatabase extends LocalDatabase {
     }
 
     private synchronized void synchronize() throws SQLException {
+        super.clear();
+        clientsGroups.clear();
         PreparedStatement pstm = connection.prepareStatement("SELECT id FROM users");
         ResultSet set = pstm.executeQuery();
         while(set.next()){
@@ -257,7 +266,7 @@ public class SQLDatabase extends LocalDatabase {
                     int weight = set2.getInt(3);
                     Color eyeColor = Color.valueOf(set2.getString(4));
                     Color hairColor = null;
-                    if (set2.getString(5) == null)
+                    if (set2.getString(5) != null)
                         hairColor = Color.valueOf(set2.getString(5));
                     Country nationality = Country.valueOf(set2.getString(6));
                     admin = new Person(aName,weight,eyeColor,hairColor,nationality);
@@ -413,14 +422,15 @@ public class SQLDatabase extends LocalDatabase {
             else
                 pstm.setNull(5,Types.NULL);
             pstm.executeUpdate();
-            synchronize();
+            super.update(id,group);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
 
     public synchronized void addIfMax(StudyGroup group, int clientId){
-        if(getMax().compareTo(group) == -1){
+        StudyGroup group1 = getMax();
+        if(group1 == null || group1.compareTo(group) == -1){
             add(group,clientId);
         }
     }
